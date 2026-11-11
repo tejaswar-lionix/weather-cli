@@ -35,5 +35,23 @@ class WeatherTests(unittest.TestCase):
             FakeClient(results=[]).current("Atlantis")
 
 
+class ForecastTests(unittest.TestCase):
+    def test_format_forecast_limits_three_days(self):
+        from weather import format_forecast
+
+        data = {
+            "city": "Berlin",
+            "days": [
+                {"date": "2026-11-12", "min": 4, "max": 9},
+                {"date": "2026-11-13", "min": 3, "max": 8},
+                {"date": "2026-11-14", "min": 5, "max": 10},
+                {"date": "2026-11-15", "min": 1, "max": 6},
+            ],
+        }
+        lines = format_forecast(data).splitlines()
+        self.assertEqual(len(lines), 3)
+        self.assertIn("2026-11-12: 4..9 C", lines[0])
+
+
 if __name__ == "__main__":
     unittest.main()

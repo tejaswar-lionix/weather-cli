@@ -43,3 +43,11 @@ class WeatherClient:
             "temperature": current["temperature"],
             "description": f"weather code {current['weathercode']}",
         }
+
+
+def format_forecast(data):
+    """Format up to three forecast days, one line per day."""
+    lines = []
+    for day in data["days"][:3]:
+        lines.append(f"{data['city']} {day['date']}: {day['min']}..{day['max']} C")
+    return "\n".join(lines)
