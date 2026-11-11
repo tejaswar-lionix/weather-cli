@@ -2,13 +2,23 @@
 
 Look up current weather and forecasts with no API key.
 
-## Status
+## Usage
 
-Starter project with a working core module and unit tests.
+```bash
+python3 -c "from weather import *; print(format_weather(WeatherClient().current('Berlin')))"
+```
+
+## Features
+
+- Geocoding and current conditions via Open-Meteo
+- Injectable HTTP layer for offline tests
+- Three-day forecast formatting with format_forecast(data)
 
 ## Tests
 
+```bash
 python3 -m unittest -q
+```
 
 ## License
 
