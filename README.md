@@ -8,6 +8,7 @@ Look up current weather and forecasts with no API key.
 python3 -c "from weather import *; print(format_weather(WeatherClient().current('Berlin')))"
 python3 -c "from weather import *; print(format_weather(WeatherClient().current('Berlin', units='fahrenheit')))"
 python3 -c "from weather import *; print(format_forecast(WeatherClient().forecast('Berlin')))"
+python3 -c "from weather import *; print(describe_weather_code(61))"
 ```
 
 ## Features
@@ -17,6 +18,7 @@ python3 -c "from weather import *; print(format_forecast(WeatherClient().forecas
 - Injectable HTTP layer for offline tests
 - Three-day forecast data with WeatherClient.forecast(city)
 - Three-day forecast formatting with format_forecast(data)
+- WMO weather code descriptions via describe_weather_code(code)
 
 ## Tests
 
