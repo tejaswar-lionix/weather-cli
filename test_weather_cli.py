@@ -36,6 +36,30 @@ class FakeForecastClient(WeatherClient):
         }
 
 
+class FakeUnitClient(WeatherClient):
+    def __init__(self):
+        self.urls = []
+        super().__init__(http_get=self.fake_get)
+
+    def fake_get(self, url):
+        self.urls.append(url)
+        if "geocoding" in url:
+            return {
+                "results": [
+                    {"latitude": 52.52, "longitude": 13.41, "name": "Berlin"}
+                ]
+            }
+        if "current_weather" in url:
+            return {"current_weather": {"temperature": 54.1, "weathercode": 3}}
+        return {
+            "daily": {
+                "time": ["2026-11-12"],
+                "temperature_2m_min": [39.2],
+                "temperature_2m_max": [48.2],
+            }
+        }
+
+
 class WeatherTests(unittest.TestCase):
     def test_format_weather(self):
         data = {
@@ -82,6 +106,37 @@ class ForecastTests(unittest.TestCase):
         lines = format_forecast(data).splitlines()
         self.assertEqual(len(lines), 3)
         self.assertIn("2026-11-12: 4..9 C", lines[0])
+
+
+class UnitTests(unittest.TestCase):
+    def test_current_fahrenheit_requests_unit_and_returns_values(self):
+        client = FakeUnitClient()
+        data = client.current("Berlin", units="fahrenheit")
+        self.assertIn("temperature_unit=fahrenheit", client.urls[-1])
+        self.assertEqual(data["temperature"], 54.1)
+        self.assertEqual(data["unit"], "F")
+
+    def test_forecast_fahrenheit_requests_unit_and_formats_values(self):
+        from weather import format_forecast
+
+        client = FakeUnitClient()
+        data = client.forecast("Berlin", units="fahrenheit")
+        self.assertIn("temperature_unit=fahrenheit", client.urls[-1])
+        self.assertEqual(data["days"][0]["min"], 39.2)
+        self.assertEqual(data["unit"], "F")
+        self.assertIn("39.2..48.2 F", format_forecast(data))
+
+    def test_celsius_omits_unit_parameter(self):
+        client = FakeUnitClient()
+        client.current("Berlin")
+        self.assertNotIn("temperature_unit", client.urls[-1])
+
+    def test_invalid_units_raise(self):
+        client = FakeUnitClient()
+        with self.assertRaises(ValueError):
+            client.current("Berlin", units="kelvin")
+        with self.assertRaises(ValueError):
+            client.forecast("Berlin", units="kelvin")
 
 
 if __name__ == "__main__":
