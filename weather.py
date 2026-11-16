@@ -11,7 +11,10 @@ def _http_get(url, timeout=10):
 
 
 def format_weather(data):
-    return f"{data['city']}: {data['temperature']} C, {data['description']}"
+    return (
+        f"{data['city']}: {data['temperature']} {data.get('unit', 'C')}, "
+        f"{data['description']}"
+    )
 
 
 class WeatherClient:
@@ -27,34 +30,41 @@ class WeatherClient:
         result = results[0]
         return result["latitude"], result["longitude"], result["name"]
 
-    def current(self, city):
+    def current(self, city, units="celsius"):
+        if units not in ("celsius", "fahrenheit"):
+            raise ValueError("units must be 'celsius' or 'fahrenheit'")
         latitude, longitude, name = self.geocode(city)
-        query = urllib.parse.urlencode(
-            {
-                "latitude": latitude,
-                "longitude": longitude,
-                "current_weather": "true",
-            }
-        )
+        params = {
+            "latitude": latitude,
+            "longitude": longitude,
+            "current_weather": "true",
+        }
+        if units == "fahrenheit":
+            params["temperature_unit"] = "fahrenheit"
+        query = urllib.parse.urlencode(params)
         payload = self._get("https://api.open-meteo.com/v1/forecast?" + query)
         current = payload["current_weather"]
         return {
             "city": name,
             "temperature": current["temperature"],
             "description": f"weather code {current['weathercode']}",
+            "unit": "F" if units == "fahrenheit" else "C",
         }
 
-    def forecast(self, city):
+    def forecast(self, city, units="celsius"):
+        if units not in ("celsius", "fahrenheit"):
+            raise ValueError("units must be 'celsius' or 'fahrenheit'")
         latitude, longitude, name = self.geocode(city)
-        query = urllib.parse.urlencode(
-            {
-                "latitude": latitude,
-                "longitude": longitude,
-                "daily": "temperature_2m_min,temperature_2m_max",
-                "forecast_days": 3,
-                "timezone": "auto",
-            }
-        )
+        params = {
+            "latitude": latitude,
+            "longitude": longitude,
+            "daily": "temperature_2m_min,temperature_2m_max",
+            "forecast_days": 3,
+            "timezone": "auto",
+        }
+        if units == "fahrenheit":
+            params["temperature_unit"] = "fahrenheit"
+        query = urllib.parse.urlencode(params)
         payload = self._get("https://api.open-meteo.com/v1/forecast?" + query)
         daily = payload["daily"]
         days = [
@@ -65,12 +75,19 @@ class WeatherClient:
                 daily["temperature_2m_max"],
             )
         ]
-        return {"city": name, "days": days}
+        return {
+            "city": name,
+            "days": days,
+            "unit": "F" if units == "fahrenheit" else "C",
+        }
 
 
 def format_forecast(data):
     """Format up to three forecast days, one line per day."""
+    unit = data.get("unit", "C")
     lines = []
     for day in data["days"][:3]:
-        lines.append(f"{data['city']} {day['date']}: {day['min']}..{day['max']} C")
+        lines.append(
+            f"{data['city']} {day['date']}: {day['min']}..{day['max']} {unit}"
+        )
     return "\n".join(lines)
