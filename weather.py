@@ -10,6 +10,26 @@ def _http_get(url, timeout=10):
         return json.loads(response.read().decode("utf-8"))
 
 
+def describe_weather_code(code):
+    if code == 0:
+        return "clear sky"
+    if 1 <= code <= 3:
+        return "partly cloudy"
+    if code in (45, 48):
+        return "fog"
+    if 51 <= code <= 57:
+        return "drizzle"
+    if 61 <= code <= 67:
+        return "rain"
+    if 71 <= code <= 77:
+        return "snow"
+    if 80 <= code <= 82:
+        return "rain showers"
+    if 95 <= code <= 99:
+        return "thunderstorm"
+    return "unknown"
+
+
 def format_weather(data):
     return (
         f"{data['city']}: {data['temperature']} {data.get('unit', 'C')}, "
