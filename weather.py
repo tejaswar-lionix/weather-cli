@@ -44,6 +44,29 @@ class WeatherClient:
             "description": f"weather code {current['weathercode']}",
         }
 
+    def forecast(self, city):
+        latitude, longitude, name = self.geocode(city)
+        query = urllib.parse.urlencode(
+            {
+                "latitude": latitude,
+                "longitude": longitude,
+                "daily": "temperature_2m_min,temperature_2m_max",
+                "forecast_days": 3,
+                "timezone": "auto",
+            }
+        )
+        payload = self._get("https://api.open-meteo.com/v1/forecast?" + query)
+        daily = payload["daily"]
+        days = [
+            {"date": date, "min": minimum, "max": maximum}
+            for date, minimum, maximum in zip(
+                daily["time"],
+                daily["temperature_2m_min"],
+                daily["temperature_2m_max"],
+            )
+        ]
+        return {"city": name, "days": days}
+
 
 def format_forecast(data):
     """Format up to three forecast days, one line per day."""

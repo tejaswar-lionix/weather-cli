@@ -16,6 +16,26 @@ class FakeClient(WeatherClient):
         return {"current_weather": {"temperature": 12.3, "weathercode": 3}}
 
 
+class FakeForecastClient(WeatherClient):
+    def __init__(self):
+        super().__init__(http_get=self.fake_get)
+
+    def fake_get(self, url):
+        if "geocoding" in url:
+            return {
+                "results": [
+                    {"latitude": 52.52, "longitude": 13.41, "name": "Berlin"}
+                ]
+            }
+        return {
+            "daily": {
+                "time": ["2026-11-12", "2026-11-13", "2026-11-14"],
+                "temperature_2m_min": [4, 3, 5],
+                "temperature_2m_max": [9, 8, 10],
+            }
+        }
+
+
 class WeatherTests(unittest.TestCase):
     def test_format_weather(self):
         data = {
@@ -36,6 +56,17 @@ class WeatherTests(unittest.TestCase):
 
 
 class ForecastTests(unittest.TestCase):
+    def test_forecast_returns_three_days(self):
+        data = FakeForecastClient().forecast("Berlin")
+        self.assertEqual(data["city"], "Berlin")
+        self.assertEqual(len(data["days"]), 3)
+        self.assertEqual(
+            data["days"][0], {"date": "2026-11-12", "min": 4, "max": 9}
+        )
+        self.assertEqual(
+            data["days"][2], {"date": "2026-11-14", "min": 5, "max": 10}
+        )
+
     def test_format_forecast_limits_three_days(self):
         from weather import format_forecast
 
