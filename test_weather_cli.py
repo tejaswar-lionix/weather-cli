@@ -79,6 +79,25 @@ class WeatherTests(unittest.TestCase):
             FakeClient(results=[]).current("Atlantis")
 
 
+class WeatherCodeTests(unittest.TestCase):
+    def test_representative_codes(self):
+        from weather import describe_weather_code
+
+        self.assertEqual(describe_weather_code(0), "clear sky")
+        self.assertEqual(describe_weather_code(2), "partly cloudy")
+        self.assertEqual(describe_weather_code(45), "fog")
+        self.assertEqual(describe_weather_code(53), "drizzle")
+        self.assertEqual(describe_weather_code(63), "rain")
+        self.assertEqual(describe_weather_code(73), "snow")
+        self.assertEqual(describe_weather_code(81), "rain showers")
+        self.assertEqual(describe_weather_code(96), "thunderstorm")
+
+    def test_unknown_code(self):
+        from weather import describe_weather_code
+
+        self.assertEqual(describe_weather_code(42), "unknown")
+
+
 class ForecastTests(unittest.TestCase):
     def test_forecast_returns_three_days(self):
         data = FakeForecastClient().forecast("Berlin")
