@@ -67,7 +67,7 @@ class WeatherClient:
         return {
             "city": name,
             "temperature": current["temperature"],
-            "description": f"weather code {current['weathercode']}",
+            "description": describe_weather_code(current["weathercode"]),
             "unit": "F" if units == "fahrenheit" else "C",
         }
 
