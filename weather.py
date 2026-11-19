@@ -71,6 +71,9 @@ class WeatherClient:
             "unit": "F" if units == "fahrenheit" else "C",
         }
 
+    def current_many(self, cities, units="celsius"):
+        return [self.current(city, units=units) for city in cities]
+
     def forecast(self, city, units="celsius"):
         if units not in ("celsius", "fahrenheit"):
             raise ValueError("units must be 'celsius' or 'fahrenheit'")

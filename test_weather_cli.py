@@ -98,6 +98,52 @@ class WeatherCodeTests(unittest.TestCase):
         self.assertEqual(describe_weather_code(42), "unknown")
 
 
+class FakeManyClient(WeatherClient):
+    def __init__(self):
+        self.urls = []
+        super().__init__(http_get=self.fake_get)
+
+    def fake_get(self, url):
+        self.urls.append(url)
+        if "geocoding" in url:
+            if "name=Paris" in url:
+                return {
+                    "results": [
+                        {"latitude": 48.85, "longitude": 2.35, "name": "Paris"}
+                    ]
+                }
+            if "name=Atlantis" in url:
+                return {"results": []}
+            return {
+                "results": [
+                    {"latitude": 52.52, "longitude": 13.41, "name": "Berlin"}
+                ]
+            }
+        return {"current_weather": {"temperature": 12.3, "weathercode": 3}}
+
+
+class CurrentManyTests(unittest.TestCase):
+    def test_returns_current_weather_for_each_city(self):
+        data = FakeManyClient().current_many(["Berlin", "Paris"])
+        self.assertEqual(len(data), 2)
+        self.assertEqual([entry["city"] for entry in data], ["Berlin", "Paris"])
+        self.assertEqual([entry["temperature"] for entry in data], [12.3, 12.3])
+
+    def test_preserves_city_order(self):
+        data = FakeManyClient().current_many(["Paris", "Berlin"])
+        self.assertEqual([entry["city"] for entry in data], ["Paris", "Berlin"])
+
+    def test_fahrenheit_passthrough(self):
+        client = FakeManyClient()
+        data = client.current_many(["Berlin", "Paris"], units="fahrenheit")
+        self.assertEqual([entry["unit"] for entry in data], ["F", "F"])
+        self.assertIn("temperature_unit=fahrenheit", client.urls[-1])
+
+    def test_geocode_errors_propagate(self):
+        with self.assertRaises(LookupError):
+            FakeManyClient().current_many(["Berlin", "Atlantis"])
+
+
 class ForecastTests(unittest.TestCase):
     def test_forecast_returns_three_days(self):
         data = FakeForecastClient().forecast("Berlin")
