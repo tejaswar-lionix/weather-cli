@@ -204,5 +204,11 @@ class UnitTests(unittest.TestCase):
             client.forecast("Berlin", units="kelvin")
 
 
+class CurrentDescriptionTests(unittest.TestCase):
+    def test_current_uses_readable_description(self):
+        data = FakeClient().current("Berlin")
+        self.assertEqual(data["description"], "partly cloudy")
+
+
 if __name__ == "__main__":
     unittest.main()

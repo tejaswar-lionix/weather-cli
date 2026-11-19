@@ -28,6 +28,10 @@ python3 -c "from weather import *; print(describe_weather_code(61))"
 python3 -m unittest -q
 ```
 
+## Additional API
+
+- `WeatherClient.current()` now returns a human-readable description derived from `describe_weather_code`.
+
 ## License
 
 MIT
